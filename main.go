@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/bhav-07/rss-aggregator/internal/database"
 	"github.com/go-chi/chi"
@@ -20,6 +21,14 @@ type apiConfig struct {
 }
 
 func main() {
+
+	// feed, err := urlToFeed("https://wagslane.dev/index.xml")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println(feed)
+
 	godotenv.Load(".env")
 
 	port := os.Getenv("PORT")
@@ -41,6 +50,8 @@ func main() {
 	apiCfg := apiConfig{
 		DB: dbQueries,
 	}
+
+	go startScrapping(dbQueries, 10, time.Minute)
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
@@ -74,5 +85,6 @@ func main() {
 	}
 
 	log.Printf("Serving on port: %s\n", port)
+
 	log.Fatal(srv.ListenAndServe())
 }
