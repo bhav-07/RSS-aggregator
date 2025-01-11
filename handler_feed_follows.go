@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bhav-07/rss-aggregator/internal/database"
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
 
@@ -37,4 +38,32 @@ func (apiCfg *apiConfig) handlerCreateFeedFollows(w http.ResponseWriter, r *http
 	}
 
 	respondWithJson(w, http.StatusCreated, databaseFeedFollowtoFeedFollow(feedfollow))
+}
+
+func (apiCfg *apiConfig) handlerGetFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
+	feedfollows, err := apiCfg.DB.GetFeedFollows(r.Context(), user.ID)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get feed follows")
+		return
+	}
+
+	respondWithJson(w, http.StatusCreated, databaseFeedFollowsToFeedFollows(feedfollows))
+}
+
+func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
+	feedFollowIDstring := chi.URLParam(r, "feedFollowID")
+	feedFollowID, err := uuid.Parse(feedFollowIDstring)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error parsing feedfollowid")
+		return
+	}
+	err = apiCfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{ID: feedFollowID, UserID: user.ID})
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't delete feedfollow")
+		return
+	}
+
+	respondWithJson(w, http.StatusOK, struct{}{})
 }
